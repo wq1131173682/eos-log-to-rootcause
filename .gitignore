@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*_testwork/
+*.egg-info/
+.venv/
+
+# tooling / os
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# local scratch (never committed)
+*.log
