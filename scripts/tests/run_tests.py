@@ -50,7 +50,7 @@ def run(path, extra_env=None, args=None):
 
 
 def main():
-    which = set(sys.argv[1:]) or {'1', '2', '3', '4'}
+    which = set(sys.argv[1:]) or {'1', '2', '3', '4', '5'}
     os.makedirs(WORK, exist_ok=True)
     failures = []
 
@@ -88,6 +88,16 @@ def main():
         print(tail)
         if rc != 0:
             failures.append('suite 4 (generic behaviour)')
+
+    if '5' in which:
+        print('')
+        print('=== 5. usage-time learning oracle ===')
+        rc, out, err = run(os.path.join(HERE, 'test_oracle.py'),
+                           extra_env={'EOS_RC_WORK': os.path.join(WORK, 'oracle')})
+        tail = '\n'.join((out + err).strip().splitlines()[-6:])
+        print(tail)
+        if rc != 0:
+            failures.append('suite 5 (oracle)')
 
     print('')
     if failures:

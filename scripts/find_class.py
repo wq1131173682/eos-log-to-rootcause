@@ -49,6 +49,7 @@ import classfile as cf      # noqa: E402
 import env as envmod        # noqa: E402
 import javap_parse as jp    # noqa: E402
 import media as mediamod    # noqa: E402
+import oracle               # noqa: E402
 
 ARCHIVE_EXT = ('.jar', '.war', '.ear', '.zip')
 
@@ -205,6 +206,11 @@ def main():
     ap.add_argument('--line', type=int, default=None, help='line number from the log')
     ap.add_argument('--layout', action='store_true', help='only print the media layout')
     ap.add_argument('--backend', choices=('py', 'javap'), default='py')
+    ap.add_argument('--true', dest='truth', default=None,
+                    help='jar actually loaded by the JVM (the ~[jar] from the log). '
+                         'When given, the arbitration verdict is self-checked against '
+                         'it and the case is recorded as confirmed (drives future '
+                         'replay). Absent, the case is recorded unconfirmed.')
     ap.add_argument('--json', default=None, help='write the full report to this file')
     args = ap.parse_args()
 
@@ -219,6 +225,19 @@ def main():
     fqcn = args.fqcn.replace('/', '.')
     if fqcn.endswith('.class'):
         fqcn = fqcn[:-len('.class')]
+
+    # usage-time learning: replay a previously CONFIRMED verdict if we've seen
+    # this (media, class, method, line) before. This is a short-circuit hint,
+    # never authoritative -- the full analysis below still runs.
+    fp = oracle.media_fp(layout)
+    if oracle.enabled() and args.method and args.line is not None:
+        hit = oracle.lookup(fp, fqcn, args.method, args.line)
+        if hit:
+            print('oracle     : [history] confirmed on %s -> %s (crc %s)'
+                  % (hit.get('ts'), ' | '.join(hit.get('sources', [])),
+                     hit.get('verdict', {}).get('crc', '?')))
+            print('             re-derived below for safety; cross-check both.')
+            print('')
 
     cands = find_candidates(layout, fqcn)
     print('class            : %s' % fqcn)
@@ -338,6 +357,24 @@ def main():
             print('  see 3.5 in SKILL.md: hole-in-line-table / synthetic method /')
             print('  cross-version drift. Next: line_lookup.py --cross, or confirm the')
             print('  running version from the log itself.')
+
+        # usage-time learning: append this arbitration as one case. When --true
+        # agrees, it is recorded confirmed and drives future replay (oracle.py).
+        if args.method and args.line is not None:
+            src = list(h['sources']) if verdict.get('sources') else (
+                [verdict['source']] if verdict.get('source') else [])
+            case = oracle.record(fp, fqcn, args.method, args.line, verdict, src,
+                                 truth=args.truth)
+            if oracle.enabled():
+                tag = ('CONFIRMED by --true' if case['confirmed'] else
+                       'recorded (unconfirmed)')
+                print('oracle     : %s -> %s%s'
+                      % (tag, oracle.journal_path(),
+                         '  truth=%s' % args.truth if args.truth else ''))
+                if args.truth and not case['confirmed']:
+                    print('             truth mismatch: arbitration says %s, '
+                          'log loaded %s' % (' | '.join(src) or '?', args.truth))
+                print('')
 
     if args.json:
         with open(args.json, 'w', encoding='utf-8') as fh:

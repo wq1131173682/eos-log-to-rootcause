@@ -22,7 +22,8 @@ $MEDIA = '<产品安装目录>'
 
 | 脚本 | 作用 |
 |---|---|
-| `find_class.py` | 通用入口：布局发现 + 类定位 + 覆盖仲裁 + 行号指纹 |
+| `find_class.py` | 通用入口：布局发现 + 类定位 + 覆盖仲裁 + 行号指纹 + **使用中自动学习** |
+| `oracle.py` | **使用中自动进化**：仲裁案例自动落库、`--true` 真值自检、历史命中回放 |
 | `media.py` | 自动发现 boot-layered / war / ear 布局，推断应用命名空间 |
 | `env.py` | JDK / 反编译器运行时自动定位（纯 Python 后端不需要 JDK） |
 | `classfile.py` | 纯 Python class 解析器（常量池→方法表→LineNumberTable），快 178 倍 |
@@ -34,8 +35,29 @@ $MEDIA = '<产品安装目录>'
 ## 测试
 
 ```powershell
-& $PY -X utf8 "$SK\tests\run_tests.py"   # 四套：解析器全等 / 后端等价 / 行号边界 / 通用性
+& $PY -X utf8 "$SK\tests\run_tests.py"   # 五套：解析器全等 / 后端等价 / 行号边界 / 通用性 / 使用中学习
 ```
+
+## 使用中自动进化（oracle）
+
+技能会在**每次使用中自己变聪明**，不需要单独训练：
+
+```powershell
+# ① 每次仲裁都会自动往案例库写一条（EOS_RC_WORK/cases.jsonl）
+& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N>
+
+# ② 日志带 ~[jar] 真值时传 --true，仲裁结论与真值自动比对，一致即"确证"
+& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> --true <jar名>
+
+# ③ 下次遇到同 (类,方法,行号)，先回放历史确证结论作提示（仍重跑全量分析兜底）
+```
+
+- **真值门控**：只有 `--true` 命中（或人类确证）的案例才进回放，未确证的只当证据、不污染；
+- **媒体指纹**：案例带稳定指纹（主归档名 + 打包形态 + 覆盖目录 jar 名），不同产品互不串味；
+- **只积累、不改逻辑**：进化不改通用仲裁规则，学习产物全在 `EOS_RC_WORK`；
+- **可关**：`EOS_ORACLE=0` 一键关闭录制与回放（CI 用）。
+
+**本地自包含、不提交远程**：脚本零 git/网络依赖（`subprocess` 仅调本地 javap），案例库默认落在用户主目录 `~/.log-to-rootcause/work`、永不写入技能目录——别人装到任意位置都能边用边学，且绝不提交远程。回归套件含自检，保证这一点不退化。
 
 ## 覆盖仲裁的通用模型
 
