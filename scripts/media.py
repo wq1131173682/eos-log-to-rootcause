@@ -3,7 +3,7 @@
 """Media discovery -- understand ANY product's install layout, no product names.
 
 The skill must work on products it has never seen. So instead of hardcoding
-"the patch dir is lib/ and product classes start with com.primeton", this module
+"the patch dir is lib/ and product classes start with com.<vendor>", this module
 DISCovers the layout:
 
   * top-level fatjars / wars / ears / jars

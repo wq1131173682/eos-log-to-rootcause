@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Line-number tolerant class locator + patch arbitration for Primeton EOS/MDM.
+"""Line-number tolerant class locator + patch arbitration for layered Java apps.
 
 Solves the line-number problem in THREE independent ways, because a logged line
 may fail to match for three different reasons:

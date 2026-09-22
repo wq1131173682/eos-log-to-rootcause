@@ -44,6 +44,17 @@ FORBIDDEN = [
     (r"PRODUCT_HINTS\s*=\s*\([^)]*primeton", 'vendor jar-name whitelist'),
 ]
 
+#: A vendor name inside a MAIN script is coupling UNLESS the same line disclaims it.
+#: The path check above cannot see the difference between a script that merely
+#: MENTIONS a vendor and one that has bound itself to it:
+#:   media.py       "instead of hardcoding ... com.primeton"   -> counter-example, OK
+#:   find_class.py  "nothing here knows about Primeton, EOS"   -> disclaimer,      OK
+#:   line_lookup.py "patch arbitration for <Vendor> EOS/MDM"   -> COUPLING,        FAIL
+VENDOR_RE = re.compile(r'Primeton|com\.primeton|EOS/MDM|\bdqms\b', re.I)
+DISCLAIM_RE = re.compile(
+    r'instead of|nothing here knows|no product|any product|any other vendor|'
+    r'not keyed to|no vendor|product-agnostic', re.I)
+
 
 def run(args, env_extra=None):
     env = dict(os.environ)
@@ -157,6 +168,24 @@ def suite3_no_hardcoding():
                     continue
                 print('  FAIL %s:%d  %s (%s)' % (rel, ln, why, m.group(0)[:44]))
                 ok = False
+
+    # vendor coupling: a vendor name in a MAIN script must be disclaimed on the
+    # same line. Test fixtures are exempt -- they legitimately use real class
+    # names as fixtures and every one of them is overridable via an EOS_* env var.
+    for path in files:
+        if os.sep + 'tests' + os.sep in path:
+            continue
+        try:
+            text = open(path, encoding='utf-8').read()
+        except Exception:
+            continue
+        rel = os.path.relpath(path, SCRIPTS)
+        for i, line in enumerate(text.splitlines(), 1):
+            if VENDOR_RE.search(line) and not DISCLAIM_RE.search(line):
+                print('  FAIL %s:%d  vendor name bound to a main script: %s'
+                      % (rel, i, line.strip()[:64]))
+                ok = False
+
     if ok:
         print('  clean: %d script files contain no required product/vendor/machine paths'
               % len(files))

@@ -35,6 +35,7 @@ Usage
 """
 
 import argparse
+import io
 import json
 import os
 import sys
@@ -150,7 +151,7 @@ def find_candidates(layout, fqcn):
                         continue
                     try:
                         with zipfile.ZipFile(
-                                __import__('io').BytesIO(z.read(n))) as nz:
+                                io.BytesIO(z.read(n))) as nz:
                             if entry in nz.namelist():
                                 info = nz.getinfo(entry)
                                 add(os.path.basename(n), path, 'nested',
@@ -192,7 +193,7 @@ def read_body(cand, fqcn):
             return z.read(pref + entry)
         if cand['kind'] == 'nested':
             return zipfile.ZipFile(
-                __import__('io').BytesIO(z.read(cand['nestedIn']))).read(entry)
+                io.BytesIO(z.read(cand['nestedIn']))).read(entry)
         return z.read(entry)
 
 
@@ -272,14 +273,7 @@ def main():
               % (args.method, args.backend))
         results = []
         for crc, members in groups.items():
-            path = members[0]['path']
             t1 = time.time()
-            try:
-                ms, err = jp.parse_members(path, fqcn, backend=args.backend,
-                                           entry=fqcn.replace('.', '/') + '.class') \
-                    if False else (None, None)
-            except Exception:
-                ms, err = None, None
             # parse from the bytes we already have: backend-agnostic and exact
             try:
                 data = read_body(members[0], fqcn)
