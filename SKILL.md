@@ -43,12 +43,12 @@ Spring Boot 分层 fatjar（`BOOT-INF/classes` + `BOOT-INF/lib`）、war（`WEB-
 ## ⓪ 第一步：发现介质布局（不要假设任何目录名）
 
 ```powershell
-$PY = 'C:\Program Files\Python312\python.exe'          # 任意 3.8+ 即可
-$SK = "$env:USERPROFILE\.dsh\skills\eos-log-to-rootcause\scripts"
+$PY = 'python'                       # 任意 3.8+ 即可；也可写绝对路径
+$SK = "$HOME/.dsh/skills/eos-log-to-rootcause/scripts"   # 本技能 scripts 目录（换工具时替换 .dsh 段）
 $MEDIA = '<产品的安装目录>'
 
 # 一条命令看清：主归档是哪个、哪些目录会覆盖它、应用自己的包命名空间是什么
-& $PY -X utf8 "$SK\find_class.py" --media $MEDIA --layout
+& $PY -X utf8 "$SK/find_class.py" --media $MEDIA --layout
 ```
 
 输出示例（两种真实介质，结构完全不同，均为自动识别）：
@@ -101,7 +101,7 @@ $MEDIA = '<产品的安装目录>'
 
 ```powershell
 # 定位 + 列出所有副本 + 用日志行号仲裁生效版本（默认纯 Python 后端，不起 JVM）
-& $PY -X utf8 "$SK\find_class.py" <全限定类名> --media $MEDIA --method <方法> --line <日志行号>
+& $PY -X utf8 "$SK/find_class.py" <全限定类名> --media $MEDIA --method <方法> --line <日志行号>
 ```
 
 ---
@@ -123,10 +123,10 @@ $MEDIA = '<产品的安装目录>'
 
 ```powershell
 # 默认快速后端（不需要 JDK）
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N>
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <m> --line <N>
 
 # 需要交叉验证时，用 javap 后端跑同一个类，输出应当逐字相同
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> --backend javap
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> --backend javap
 ```
 
 ### 正确性保证（不是猜测）
@@ -157,7 +157,7 @@ $MEDIA = '<产品的安装目录>'
 ```
 
 ```powershell
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> \
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> \
       --true <日志~[jar]里的实际jar名>     # 可选：提供真值，自动确认
 ```
 
@@ -190,7 +190,7 @@ $MEDIA = '<产品的安装目录>'
 
 ```powershell
 # 看本机工具解析结果（找不到会显示 null，不影响纯 Python 主流程）
-& $PY -X utf8 "$SK\env.py"
+& $PY -X utf8 "$SK/env.py"
 ```
 
 - **JDK 8 即可，不需要 JDK 17**。`javap`/`java` 只在需要字节码文本或做对照时才用——**行号表与仲裁默认纯 Python，完全不需要 JDK**。
@@ -229,7 +229,7 @@ at com.example.svc.OrderService.submit(OrderService.java:366) ~[order-core-1.4-p
 用 `find_class.py` 一次给出**全部副本 + 来源 + 覆盖关系**：
 
 ```powershell
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA
 ```
 
 **顺序原则**：覆盖目录内的副本**先看**（它才是生效版本，见上一节）；未命中再看主归档。
@@ -398,18 +398,18 @@ delta (B−A): -13 x1, +17 x3, +20 x25, +23 x5, +35 x1, +36 x2, +39 x1, +40 x16
 
 ```powershell
 $PY    = 'python'      # 或本机 python 的绝对路径
-$SK    = "$env:USERPROFILE\.dsh\skills\eos-log-to-rootcause\scripts"
+$SK    = "$HOME/.dsh/skills/eos-log-to-rootcause/scripts"   # 本技能 scripts 目录（换工具时替换 .dsh 段）
 $MEDIA = '<产品安装目录>'
 
 # 布局总览（先跑这个）
-& $PY -X utf8 "$SK\find_class.py" --media $MEDIA --layout
+& $PY -X utf8 "$SK/find_class.py" --media $MEDIA --layout
 
 # 定位 + 列出全部副本 + 用日志行号仲裁生效版本（自动识别空洞/合成/跨版本）
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <方法> --line <行号>
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <方法> --line <行号>
 
 # 行号归属消歧 / 跨版本换算
-& $PY -X utf8 "$SK\line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号>
-& $PY -X utf8 "$SK\line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号> --cross
+& $PY -X utf8 "$SK/line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号>
+& $PY -X utf8 "$SK/line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号> --cross
 ```
 
 ---
@@ -458,7 +458,7 @@ java -jar <cfr.jar> <③仲裁胜出的jar> --outputdir <输出目录> --caseins
 
 ```powershell
 # 纯 Python（默认，不需要 JDK）——推荐
-& $PY -X utf8 "$SK\line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号>
+& $PY -X utf8 "$SK/line_lookup.py" <FQCN> --lib <覆盖目录> --method <方法> --line <行号>
 
 # 需要字节码指令文本时，才用 javap（路径由 env.py 自动定位）
 & $PY -X utf8 -c "import sys;sys.path.insert(0,r'$SK');import env,subprocess;print(subprocess.run([env.javap_path(),'-p','-l','-c','-cp',r'<目标jar>',r'<FQCN>'],capture_output=True,text=True).stdout)"

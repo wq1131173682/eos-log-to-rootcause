@@ -8,14 +8,14 @@
 
 ```powershell
 $PY    = 'python'
-$SK    = "$PWD\scripts"
+$SK    = "$PWD/scripts"
 $MEDIA = '<产品安装目录>'
 
 # 1. 看清介质布局（主归档 / 覆盖目录 / 命名空间）
-& $PY -X utf8 "$SK\find_class.py" --media $MEDIA --layout
+& $PY -X utf8 "$SK/find_class.py" --media $MEDIA --layout
 
 # 2. 定位类 + 用日志行号仲裁生效版本
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <方法> --line <日志行号>
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <方法> --line <日志行号>
 ```
 
 ## 工具链
@@ -35,7 +35,7 @@ $MEDIA = '<产品安装目录>'
 ## 测试
 
 ```powershell
-& $PY -X utf8 "$SK\tests\run_tests.py"   # 五套：解析器全等 / 后端等价 / 行号边界 / 通用性 / 使用中学习
+& $PY -X utf8 "$SK/tests/run_tests.py"   # 五套：解析器全等 / 后端等价 / 行号边界 / 通用性 / 使用中学习
 ```
 
 ## 使用中自动进化（oracle）
@@ -44,10 +44,10 @@ $MEDIA = '<产品安装目录>'
 
 ```powershell
 # ① 每次仲裁都会自动往案例库写一条（EOS_RC_WORK/cases.jsonl）
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N>
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <m> --line <N>
 
 # ② 日志带 ~[jar] 真值时传 --true，仲裁结论与真值自动比对，一致即"确证"
-& $PY -X utf8 "$SK\find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> --true <jar名>
+& $PY -X utf8 "$SK/find_class.py" <FQCN> --media $MEDIA --method <m> --line <N> --true <jar名>
 
 # ③ 下次遇到同 (类,方法,行号)，先回放历史确证结论作提示（仍重跑全量分析兜底）
 ```
