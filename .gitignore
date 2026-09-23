@@ -13,3 +13,6 @@ Thumbs.db
 
 # local scratch (never committed)
 *.log
+# analysis workspace: holds product patch jars, javap dumps and ticket ids.
+# This repo is public -- never commit media binaries from here.
+work/
